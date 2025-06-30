@@ -63,9 +63,7 @@ export const getAllCourses = async (req, res) => {
 
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
-
     const total = await db.Course.count();
-
     try {
         const courses = await db.Course.findAll(
             {
@@ -141,6 +139,7 @@ export const updateCourse = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 /**
  * @swagger
