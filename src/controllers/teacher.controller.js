@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import { authMiddleware } from '../middleware/middleware.js'; // Import the JWT middleware
 
 /**
  * @swagger
@@ -13,6 +14,8 @@ import db from '../models/index.js';
  *   post:
  *     summary: Create a new teacher
  *     tags: [Teachers]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -28,6 +31,10 @@ import db from '../models/index.js';
  *     responses:
  *       201:
  *         description: Teacher created
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 export const createTeacher = async (req, res) => {
     try {
@@ -44,6 +51,8 @@ export const createTeacher = async (req, res) => {
  *   get:
  *     summary: Get all teachers
  *     tags: [Teachers]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -56,18 +65,17 @@ export const createTeacher = async (req, res) => {
  *     responses:
  *       200:
  *         description: List of teachers
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 export const getAllTeachers = async (req, res) => {
     try {
-        // Pagination
         const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
-
-        // Sorting
         const sortOrder = req.query.sort === 'desc' ? 'DESC' : 'ASC';
-
-        // Eager loading
         const include = [];
         if (req.query.populate) {
             const relations = req.query.populate.split(',');
@@ -81,7 +89,6 @@ export const getAllTeachers = async (req, res) => {
             order: [['createdAt', sortOrder]],
             include
         });
-
         res.status(200).json({
             total: result.count,
             page,
@@ -92,12 +99,15 @@ export const getAllTeachers = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 /**
  * @swagger
  * /teachers/{id}:
  *   get:
  *     summary: Get a teacher by ID
  *     tags: [Teachers]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -106,8 +116,12 @@ export const getAllTeachers = async (req, res) => {
  *     responses:
  *       200:
  *         description: Teacher found
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const getTeacherById = async (req, res) => {
     try {
@@ -125,6 +139,8 @@ export const getTeacherById = async (req, res) => {
  *   put:
  *     summary: Update a teacher
  *     tags: [Teachers]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -144,6 +160,12 @@ export const getTeacherById = async (req, res) => {
  *     responses:
  *       200:
  *         description: Updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const updateTeacher = async (req, res) => {
     try {
@@ -156,13 +178,14 @@ export const updateTeacher = async (req, res) => {
     }
 };
 
-
 /**
  * @swagger
  * /teachers/{id}:
  *   delete:
  *     summary: Delete a teacher
  *     tags: [Teachers]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -171,6 +194,12 @@ export const updateTeacher = async (req, res) => {
  *     responses:
  *       200:
  *         description: Deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const deleteTeacher = async (req, res) => {
     try {

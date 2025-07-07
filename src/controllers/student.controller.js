@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import { authMiddleware } from '../middleware/middleware.js'; // Import the JWT middleware
 
 /**
  * @swagger
@@ -10,9 +11,11 @@ import db from '../models/index.js';
 /**
  * @swagger
  * /students:
- *    post:
+ *   post:
  *     summary: Create a new student
  *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -27,9 +30,12 @@ import db from '../models/index.js';
  *                 type: string
  *     responses:
  *       201:
- *         description: Students created
+ *         description: Student created
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
-
 export const createStudent = async (req, res) => {
     try {
         const student = await db.Student.create(req.body);
@@ -45,6 +51,8 @@ export const createStudent = async (req, res) => {
  *   get:
  *     summary: Get all students
  *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -57,16 +65,17 @@ export const createStudent = async (req, res) => {
  *     responses:
  *       200:
  *         description: List of students
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 export const getAllStudents = async (req, res) => {
     try {
-        // Pagination
         const limit = parseInt(req.query.limit) || 6;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
-        // Sorting
         const sortOrder = req.query.sort === 'desc' ? 'DESC' : 'ASC';
-        // Eager loading
         const include = [];
         if (req.query.populate) {
             const relations = req.query.populate.split(',');
@@ -74,32 +83,31 @@ export const getAllStudents = async (req, res) => {
                 if (rel === 'courseId') include.push({ model: db.Course });
             });
         }
-        // Fetch with Sequelize
         const result = await db.Student.findAndCountAll({
             limit,
             offset,
             order: [['createdAt', sortOrder]],
             include
         });
-
-        // Response
         res.status(200).json({
             total: result.count,
             page,
             pages: Math.ceil(result.count / limit),
             data: result.rows
         });
-
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
+
 /**
  * @swagger
  * /students/{id}:
  *   get:
  *     summary: Get a student by ID
  *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -108,8 +116,12 @@ export const getAllStudents = async (req, res) => {
  *     responses:
  *       200:
  *         description: A student
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const getStudentById = async (req, res) => {
     try {
@@ -127,6 +139,8 @@ export const getStudentById = async (req, res) => {
  *   put:
  *     summary: Update a student
  *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -140,6 +154,12 @@ export const getStudentById = async (req, res) => {
  *     responses:
  *       200:
  *         description: Updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const updateStudent = async (req, res) => {
     try {
@@ -152,13 +172,14 @@ export const updateStudent = async (req, res) => {
     }
 };
 
-
 /**
  * @swagger
  * /students/{id}:
  *   delete:
  *     summary: Delete a student
  *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -167,6 +188,12 @@ export const updateStudent = async (req, res) => {
  *     responses:
  *       200:
  *         description: Deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const deleteStudent = async (req, res) => {
     try {

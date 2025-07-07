@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import { authMiddleware } from '../middleware/middleware.js'; // Import the JWT middleware
 
 /**
  * @swagger
@@ -13,6 +14,8 @@ import db from '../models/index.js';
  *   post:
  *     summary: Create a new course
  *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -30,6 +33,10 @@ import db from '../models/index.js';
  *     responses:
  *       201:
  *         description: Course created
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 export const createCourse = async (req, res) => {
     try {
@@ -46,6 +53,8 @@ export const createCourse = async (req, res) => {
  *   get:
  *     summary: Get all courses
  *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -58,19 +67,21 @@ export const createCourse = async (req, res) => {
  *     responses:
  *       200:
  *         description: List of courses
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 export const getAllCourses = async (req, res) => {
-
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
     const total = await db.Course.count();
     try {
-        const courses = await db.Course.findAll(
-            {
-                // include: [db.Student, db.Teacher],
-                limit: limit, offset: (page - 1) * limit
-            }
-        );
+        const courses = await db.Course.findAll({
+            include: [db.Student, db.Teacher],
+            limit: limit,
+            offset: (page - 1) * limit
+        });
         res.json({
             total: total,
             page: page,
@@ -88,6 +99,8 @@ export const getAllCourses = async (req, res) => {
  *   get:
  *     summary: Get a course by ID
  *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -96,8 +109,12 @@ export const getAllCourses = async (req, res) => {
  *     responses:
  *       200:
  *         description: Course found
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const getCourseById = async (req, res) => {
     try {
@@ -115,6 +132,8 @@ export const getCourseById = async (req, res) => {
  *   put:
  *     summary: Update a course
  *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -128,6 +147,12 @@ export const getCourseById = async (req, res) => {
  *     responses:
  *       200:
  *         description: Course updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const updateCourse = async (req, res) => {
     try {
@@ -140,13 +165,14 @@ export const updateCourse = async (req, res) => {
     }
 };
 
-
 /**
  * @swagger
  * /courses/{id}:
  *   delete:
  *     summary: Delete a course
  *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -155,6 +181,12 @@ export const updateCourse = async (req, res) => {
  *     responses:
  *       200:
  *         description: Course deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
 export const deleteCourse = async (req, res) => {
     try {
