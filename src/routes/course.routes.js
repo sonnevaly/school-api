@@ -6,7 +6,7 @@ import {
     updateCourse,
     deleteCourse
 } from '../controllers/course.controller.js';
-
+import { authMiddleware } from '../middleware/middleware.js';
 const router = express.Router();
 
 router.post('/', createCourse);
